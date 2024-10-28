@@ -31,9 +31,9 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define CHANNEL_1 1
-#define CHANNEL_2 3
-#define CHANNEL_3 4
+#define CHANNEL_1 TIM_CHANNEL_1
+#define CHANNEL_2 TIM_CHANNEL_3
+#define CHANNEL_3 TIM_CHANNEL_4
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -44,6 +44,7 @@
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
 static RGB colors={0,0,0};
+static int counter = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -211,17 +212,23 @@ void TIM4_IRQHandler(void)
   HAL_TIM_IRQHandler(&htim4);
   /* USER CODE BEGIN TIM4_IRQn 1 */
 
+  counter = counter % 255;
   colors.red = colors.red % 255;
   colors.green = colors.green % 255;
   colors.blue = colors.blue % 255;
 
-  pwm_setvalue(&htim4, CHANNEL_1, colors.red);
-  pwm_setvalue(&htim4, CHANNEL_2, colors.green);
-  pwm_setvalue(&htim4, CHANNEL_3, colors.blue);
+  if (counter == 128){
+	  colors.red++;
+	  colors.green = colors.green + 2;
+	  colors.blue = colors.blue + 4;
+  }
 
-  colors.red++;
-  colors.green = colors.green + 2;
-  colors.blue = colors.blue + 4;
+  counter ++;
+
+  __HAL_TIM_SET_COMPARE(&htim4, CHANNEL_1, colors.red);
+  __HAL_TIM_SET_COMPARE(&htim4, CHANNEL_2, colors.green);
+  __HAL_TIM_SET_COMPARE(&htim4, CHANNEL_3, colors.blue);
+
 
   /* USER CODE END TIM4_IRQn 1 */
 }

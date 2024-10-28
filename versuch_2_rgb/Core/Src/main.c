@@ -111,7 +111,11 @@ int main(void)
   MX_USB_OTG_FS_PCD_Init();
   MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
-  if (HAL_TIM_Base_Start_IT(&htim4) != HAL_OK){
+  TIM4->CCR1 = 128;
+  TIM4->CCR3 = 128;
+  TIM4->CCR4 = 128;
+
+  if ((HAL_TIM_PWM_Start_IT(&htim4, TIM_CHANNEL_1) || HAL_TIM_PWM_Start_IT(&htim4, TIM_CHANNEL_3) || HAL_TIM_PWM_Start_IT(&htim4, TIM_CHANNEL_4)) != HAL_OK){
 
 	  Error_Handler();
   }

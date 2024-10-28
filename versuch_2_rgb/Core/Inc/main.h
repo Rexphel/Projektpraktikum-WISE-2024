@@ -85,10 +85,6 @@ void Error_Handler(void);
 #define STLK_RX_GPIO_Port GPIOD
 #define STLK_TX_Pin GPIO_PIN_9
 #define STLK_TX_GPIO_Port GPIOD
-#define PWMCH3_Pin GPIO_PIN_14
-#define PWMCH3_GPIO_Port GPIOD
-#define PWMCH4_Pin GPIO_PIN_15
-#define PWMCH4_GPIO_Port GPIOD
 #define USB_PowerSwitchOn_Pin GPIO_PIN_6
 #define USB_PowerSwitchOn_GPIO_Port GPIOG
 #define USB_OverCurrent_Pin GPIO_PIN_7
@@ -115,6 +111,10 @@ void Error_Handler(void);
 #define PWMcH1_GPIO_Port GPIOB
 #define LD2_Pin GPIO_PIN_7
 #define LD2_GPIO_Port GPIOB
+#define PWMCH3_Pin GPIO_PIN_8
+#define PWMCH3_GPIO_Port GPIOB
+#define PWMCH4_Pin GPIO_PIN_9
+#define PWMCH4_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 
