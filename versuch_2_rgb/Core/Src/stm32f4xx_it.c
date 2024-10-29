@@ -50,6 +50,7 @@ static int counter = 0;
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN PFP */
 void pwm_setvalue(TIM_HandleTypeDef *htim, uint32_t TIM_CHANNEL , uint16_t value);
+void pwm_setvalue_alt(TIM_HandleTypeDef *htim, uint32_t TIM_CHANNEL , uint16_t value);
 
 /* USER CODE END PFP */
 
@@ -217,7 +218,7 @@ void TIM4_IRQHandler(void)
   colors.green = colors.green % 255;
   colors.blue = colors.blue % 255;
 
-  if (counter == 128){
+  if (counter == 0){
 	  colors.red++;
 	  colors.green = colors.green + 2;
 	  colors.blue = colors.blue + 4;
@@ -226,8 +227,8 @@ void TIM4_IRQHandler(void)
   counter ++;
 
   __HAL_TIM_SET_COMPARE(&htim4, CHANNEL_1, colors.red);
-  __HAL_TIM_SET_COMPARE(&htim4, CHANNEL_2, colors.green);
-  __HAL_TIM_SET_COMPARE(&htim4, CHANNEL_3, colors.blue);
+  pwm_setvalue(&htim4, CHANNEL_2, colors.green);
+  pwm_setvalue_alt(&htim4, CHANNEL_3, colors.blue);
 
 
   /* USER CODE END TIM4_IRQn 1 */
@@ -246,5 +247,20 @@ void pwm_setvalue(TIM_HandleTypeDef *htim, uint32_t TIM_CHANNEL , uint16_t value
     HAL_TIM_PWM_ConfigChannel(htim, &sConfigOC, TIM_CHANNEL);
     HAL_TIM_PWM_Start(htim, TIM_CHANNEL);
 }
+
+void pwm_setvalue_alt(TIM_HandleTypeDef *htim, uint32_t TIM_CHANNEL , uint16_t value){
+	switch (TIM_CHANNEL){
+		case CHANNEL_1:
+			htim->Instance->CCR1 = value;
+			break;
+		case CHANNEL_2:
+			htim->Instance->CCR3 = value;
+			break;
+		case CHANNEL_3:
+			htim->Instance->CCR4 = value;
+			break;
+	}
+}
+
 
 /* USER CODE END 1 */
