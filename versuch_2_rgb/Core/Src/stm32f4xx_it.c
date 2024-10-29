@@ -23,6 +23,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "rgb.h"
+#include <math.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -34,6 +35,7 @@
 #define CHANNEL_1 TIM_CHANNEL_1
 #define CHANNEL_2 TIM_CHANNEL_3
 #define CHANNEL_3 TIM_CHANNEL_4
+#define PI 3.141592654
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -213,10 +215,10 @@ void TIM4_IRQHandler(void)
   HAL_TIM_IRQHandler(&htim4);
   /* USER CODE BEGIN TIM4_IRQn 1 */
 
-  counter = counter % 255;
-  colors.red = colors.red % 255;
-  colors.green = colors.green % 255;
-  colors.blue = colors.blue % 255;
+  counter = counter % 16;
+  colors.red = colors.red % 360;
+  colors.green = colors.green % 360;
+  colors.blue = colors.blue % 360;
 
   if (counter == 0){
 	  colors.red++;
@@ -226,7 +228,10 @@ void TIM4_IRQHandler(void)
 
   counter ++;
 
-  __HAL_TIM_SET_COMPARE(&htim4, CHANNEL_1, colors.red);
+  double angle_radians = (colors.red * PI) / 180.0;
+  double result = fabs(sin(angle_radians)) * 255;
+
+  __HAL_TIM_SET_COMPARE(&htim4, CHANNEL_1, result);
   pwm_setvalue(&htim4, CHANNEL_2, colors.green);
   pwm_setvalue_alt(&htim4, CHANNEL_3, colors.blue);
 
@@ -238,10 +243,12 @@ void TIM4_IRQHandler(void)
 
 void pwm_setvalue(TIM_HandleTypeDef *htim, uint32_t TIM_CHANNEL , uint16_t value)
 {
+	double angle_radians = (value * PI) / 180.0;
+	double result = fabs(sin(angle_radians)) * 255;
     TIM_OC_InitTypeDef sConfigOC;
 
     sConfigOC.OCMode = TIM_OCMODE_PWM1;
-    sConfigOC.Pulse = value;
+    sConfigOC.Pulse = result;
     sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
     sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
     HAL_TIM_PWM_ConfigChannel(htim, &sConfigOC, TIM_CHANNEL);
@@ -249,15 +256,19 @@ void pwm_setvalue(TIM_HandleTypeDef *htim, uint32_t TIM_CHANNEL , uint16_t value
 }
 
 void pwm_setvalue_alt(TIM_HandleTypeDef *htim, uint32_t TIM_CHANNEL , uint16_t value){
+
+	double angle_radians = (value * PI) / 180.0;
+	double result = fabs(sin(angle_radians)) * 255;
+
 	switch (TIM_CHANNEL){
 		case CHANNEL_1:
-			htim->Instance->CCR1 = value;
+			htim->Instance->CCR1 = result;
 			break;
 		case CHANNEL_2:
-			htim->Instance->CCR3 = value;
+			htim->Instance->CCR3 = result;
 			break;
 		case CHANNEL_3:
-			htim->Instance->CCR4 = value;
+			htim->Instance->CCR4 = result;
 			break;
 	}
 }
