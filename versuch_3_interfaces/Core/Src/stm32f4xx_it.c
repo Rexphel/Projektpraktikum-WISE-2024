@@ -22,6 +22,7 @@
 #include "stm32f4xx_it.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "lcd.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -41,8 +42,6 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
-static double adcVal;
-
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -58,6 +57,7 @@ static double adcVal;
 /* External variables --------------------------------------------------------*/
 extern ADC_HandleTypeDef hadc1;
 /* USER CODE BEGIN EV */
+
 
 /* USER CODE END EV */
 
@@ -209,14 +209,6 @@ void ADC_IRQHandler(void)
   /* USER CODE END ADC_IRQn 0 */
   HAL_ADC_IRQHandler(&hadc1);
   /* USER CODE BEGIN ADC_IRQn 1 */
-
-  adcVal = HAL_ADC_GetValue(&hadc1);
-  if (adcVal > 2047){
-	  HAL_GPIO_WritePin(LD1_GPIO_Port, LD1_Pin, GPIO_PIN_SET);
-  }
-  else{
-	  HAL_GPIO_WritePin(LD1_GPIO_Port, LD1_Pin, GPIO_PIN_RESET);
-  }
 
   /* USER CODE END ADC_IRQn 1 */
 }
