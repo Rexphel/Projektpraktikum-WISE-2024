@@ -60,8 +60,8 @@ all: main-build
 main-build: versuch_3_interfaces.elf secondary-outputs
 
 # Tool invocations
-versuch_3_interfaces.elf versuch_3_interfaces.map: $(OBJS) $(USER_OBJS) /home/rexphel/git/Projektpraktikum-WISE-2024/versuch_3_interfaces/STM32F429ZITX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "versuch_3_interfaces.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/home/rexphel/git/Projektpraktikum-WISE-2024/versuch_3_interfaces/STM32F429ZITX_FLASH.ld" --specs=nosys.specs -Wl,-Map="versuch_3_interfaces.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -u _printf_float -u _scanf_float -Wl,--start-group -lc -lm -Wl,--end-group
+versuch_3_interfaces.elf versuch_3_interfaces.map: $(OBJS) $(USER_OBJS) /home/Rexphel/git/Projektpraktikum-WISE-2024/versuch_3_interfaces/STM32F429ZITX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "versuch_3_interfaces.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/home/Rexphel/git/Projektpraktikum-WISE-2024/versuch_3_interfaces/STM32F429ZITX_FLASH.ld" --specs=nosys.specs -Wl,-Map="versuch_3_interfaces.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -u _printf_float -u _scanf_float -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

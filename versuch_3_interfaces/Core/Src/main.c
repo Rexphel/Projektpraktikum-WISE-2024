@@ -23,6 +23,9 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "lcd.h"
+#include "bmp280.h"
+#include <stdio.h>
+#include <stdlib.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -52,6 +55,8 @@ ETH_HandleTypeDef heth;
 
 I2C_HandleTypeDef hi2c2;
 
+SPI_HandleTypeDef hspi1;
+
 UART_HandleTypeDef huart3;
 
 PCD_HandleTypeDef hpcd_USB_OTG_FS;
@@ -59,6 +64,13 @@ PCD_HandleTypeDef hpcd_USB_OTG_FS;
 /* USER CODE BEGIN PV */
 static int adcVal;
 static char msg[32];
+BMP280_HandleTypedef hbmp280;
+LCD_HandleTypeDef lcd;
+
+static float temp;
+static float press;
+static float humid;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -69,6 +81,7 @@ static void MX_USART3_UART_Init(void);
 static void MX_USB_OTG_FS_PCD_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_I2C2_Init(void);
+static void MX_SPI1_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -111,8 +124,15 @@ int main(void)
   MX_USB_OTG_FS_PCD_Init();
   MX_ADC1_Init();
   MX_I2C2_Init();
+  MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
-  LCD_HandleTypeDef lcd;
+
+  int status=0;
+
+
+  hbmp280.spi = &hspi1;
+  bmp280_init_default_params(&hbmp280.params);
+  status = status | bmp280_init(&hbmp280, &hbmp280.params);
 
   lcd.i2c = &hi2c2;
   lcd.backlight_enable = 1;
@@ -121,6 +141,15 @@ int main(void)
   LCD_Begin(&lcd);
   LCD_Test(&lcd);
   LCD_Clear(&lcd);
+
+  if(!status){
+	  sprintf(msg, "BMP280 Com Error");
+	  LCD_Print(&lcd, msg);
+	  exit(1);
+
+  }
+
+
   //LCD_SetCursor(&lcd, 0, 0);
   /* USER CODE END 2 */
 
@@ -128,10 +157,16 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  LCD_Clear(&lcd);
-	  LCD_Print(&lcd, msg);
+
 	  HAL_ADC_Start_IT(&hadc1);
-	  HAL_Delay(5);
+	  LCD_Clear(&lcd);
+	  sprintf(msg, "ADC: %d", adcVal);
+	  LCD_Print(&lcd, msg);
+	  LCD_SetCursor(&lcd, 1, 0);
+	  sprintf(msg, "Temp:%.1f, Pre:%.1f, Humid:%.1f", temp, press, humid);
+	  LCD_Print(&lcd, msg);
+	  HAL_Delay(100);
+
 	  //LCD_Print(&lcd, "asd");
 	  /*HAL_ADC_Start_IT(&hadc1);
 	  if (HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY) == HAL_OK){
@@ -234,7 +269,7 @@ static void MX_ADC1_Init(void)
     Error_Handler();
   }
 
-  /** Configure for thdeve selected ADC regular channel its corresponding rank in the sequencer and its sample time.
+  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
   */
   sConfig.Channel = ADC_CHANNEL_3;
   sConfig.Rank = 1;
@@ -347,6 +382,44 @@ static void MX_I2C2_Init(void)
 }
 
 /**
+  * @brief SPI1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_SPI1_Init(void)
+{
+
+  /* USER CODE BEGIN SPI1_Init 0 */
+
+  /* USER CODE END SPI1_Init 0 */
+
+  /* USER CODE BEGIN SPI1_Init 1 */
+
+  /* USER CODE END SPI1_Init 1 */
+  /* SPI1 parameter configuration*/
+  hspi1.Instance = SPI1;
+  hspi1.Init.Mode = SPI_MODE_MASTER;
+  hspi1.Init.Direction = SPI_DIRECTION_2LINES;
+  hspi1.Init.DataSize = SPI_DATASIZE_8BIT;
+  hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
+  hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
+  hspi1.Init.NSS = SPI_NSS_SOFT;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_128;
+  hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
+  hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
+  hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+  hspi1.Init.CRCPolynomial = 10;
+  if (HAL_SPI_Init(&hspi1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN SPI1_Init 2 */
+
+  /* USER CODE END SPI1_Init 2 */
+
+}
+
+/**
   * @brief USART3 Initialization Function
   * @param None
   * @retval None
@@ -435,6 +508,9 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOG_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(SPI1_NSS_GPIO_Port, SPI1_NSS_Pin, GPIO_PIN_SET);
+
+  /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, LD1_Pin|LD3_Pin|LD2_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
@@ -445,6 +521,13 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(USER_Btn_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : SPI1_NSS_Pin */
+  GPIO_InitStruct.Pin = SPI1_NSS_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(SPI1_NSS_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : LD1_Pin LD3_Pin LD2_Pin */
   GPIO_InitStruct.Pin = LD1_Pin|LD3_Pin|LD2_Pin;
@@ -466,24 +549,22 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(USB_OverCurrent_GPIO_Port, &GPIO_InitStruct);
 
-/* USER CODE BEGIN MX_GPIO_devInit_2 */
+/* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */
 }
 
 /* USER CODE BEGIN 4 */
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc){
-	  adcVal = HAL_ADC_GetValue(&hadc1);
-	  if (adcVal > 2047){
-	  	  HAL_GPIO_WritePin(LD1_GPIO_Port, LD1_Pin, GPIO_PIN_SET);
-	    }
-	    else{
-	  	  HAL_GPIO_WritePin(LD1_GPIO_Port, LD1_Pin, GPIO_PIN_RESET);
-	    }
+	adcVal = HAL_ADC_GetValue(&hadc1);
+	if (adcVal > 2047){
+	  HAL_GPIO_WritePin(LD1_GPIO_Port, LD1_Pin, GPIO_PIN_SET);
+	}
+	else{
+	  HAL_GPIO_WritePin(LD1_GPIO_Port, LD1_Pin, GPIO_PIN_RESET);
+	}
+	bmp280_read_float(&hbmp280, &temp, &press, &humid);
 
-	    sprintf(msg, "Value: %d", adcVal);
-	    //LCD_Print(&lcddev, "test");
-	    //HAL_Delay(200);
 }
 
 
@@ -507,7 +588,7 @@ void Error_Handler(void)
 #ifdef  USE_FULL_ASSERT
 /**
   * @brief  Reports the name of the source file and the source line number
-  *       test  where the assert_param error has occurred.
+  *         where the assert_param error has occurred.
   * @param  file: pointer to the source file name
   * @param  line: assert_param error line source number
   * @retval None
